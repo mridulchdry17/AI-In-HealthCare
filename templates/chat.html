@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Assistant</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .chat-section {
+            flex: 2;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .health-form-section {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            height: fit-content;
+        }
+
+        h2 {
+            color: #1a73e8;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8eaed;
+        }
+
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            white-space: pre-line;
+            line-height: 1.5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user { 
+            background: #e3f2fd;
+            margin-left: 20px;
+            border-top-left-radius: 5px;
+        }
+
+        .assistant { 
+            background: white;
+            margin-right: 20px;
+            border-top-right-radius: 5px;
+            font-family: 'Consolas', monospace;
+        }
+
+        .input-area {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input, select { 
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover { 
+            background: #1557b0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        .recommendations {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        strong {
+            color: #1a73e8;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <h2>Medical Assistant</h2>
+            <div id="chat-messages"></div>
+            <div id="typing" class="typing-indicator">Assistant is typing...</div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Describe your health concern...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div class="health-form-section">
+            <h2>Health Recommendations</h2>
+            <form id="healthForm" onsubmit="getRecommendations(event)">
+                <div class="form-group">
+                    <label for="age">Age (years)</label>
+                    <input type="number" id="age" required min="1" max="120">
+                </div>
+                
+                <div class="form-group">
+                    <label for="height">Height (cm)</label>
+                    <input type="number" id="height" required min="50" max="250">
+                </div>
+                
+                <div class="form-group">
+                    <label for="weight">Weight (kg)</label>
+                    <input type="number" id="weight" required min="20" max="300">
+                </div>
+                
+                <div class="form-group">
+                    <label for="activity">Activity Level</label>
+                    <select id="activity" required>
+                        <option value="">Select level</option>
+                        <option value="Sedentary">Sedentary</option>
+                        <option value="Light">Light Activity</option>
+                        <option value="Moderate">Moderate Activity</option>
+                        <option value="Very Active">Very Active</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="conditions">Medical Conditions (optional)</label>
+                    <input type="text" id="conditions" placeholder="e.g., diabetes, hypertension">
+                </div>
+                
+                <div class="form-group">
+                    <label for="goals">Health Goals (optional)</label>
+                    <input type="text" id="goals" placeholder="e.g., weight loss, muscle gain">
+                </div>
+                
+                <button type="submit">Get Recommendations</button>
+            </form>
+            
+            <div id="recommendations" class="recommendations"></div>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            document.getElementById('typing').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                });
+
+                const data = await response.json();
+                document.getElementById('typing').style.display = 'none';
+                addMessage(data.response, 'assistant');
+                
+            } catch (error) {
+                document.getElementById('typing').style.display = 'none';
+                addMessage('Sorry, there was an error processing your request.', 'assistant');
+            }
+        }
+
+        async function getRecommendations(event) {
+            event.preventDefault();
+            
+            const data = {
+                age: document.getElementById('age').value,
+                height: document.getElementById('height').value,
+                weight: document.getElementById('weight').value,
+                activity_level: document.getElementById('activity').value,
+                conditions: document.getElementById('conditions').value,
+                goals: document.getElementById('goals').value
+            };
+
+            try {
+                const response = await fetch('/api/health-recommendations', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                const recsDiv = document.getElementById('recommendations');
+                recsDiv.style.display = 'block';
+                recsDiv.innerHTML = `
+                    <strong>PERSONALIZED HEALTH PLAN</strong><br><br>
+                    ${result.recommendations.details
+                        .replace(/\*\*/g, '')
+                        .replace(/\n\n/g, '<br><br>')
+                        .replace(/^([^:]+):/gm, '<strong>$1:</strong>')
+                        .replace(/\n([•*]) /g, '<br>• ')
+                        .replace(/BMI:/g, '<strong>BMI:</strong>')
+                        .replace(/Health Status:/g, '<strong>Health Status:</strong>')
+                        .replace(/Important Note:/g, '<br><strong>Important Note:</strong>')}
+                `;
+                
+            } catch (error) {
+                alert('Error getting recommendations. Please try again.');
+            }
+        }
+
+        function addMessage(text, type) {
+            const messages = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            
+            const formattedText = text
+                .replace(/\n/g, '<br>')
+                .replace(/•/g, '<br>•')
+                .replace(/BRIEF EXPLANATION:/g, '<strong>BRIEF EXPLANATION:</strong>')
+                .replace(/COMMON REMEDIES AND TREATMENTS:/g, '<strong>COMMON REMEDIES AND TREATMENTS:</strong>')
+                .replace(/WHEN TO SEEK MEDICAL HELP:/g, '<strong>WHEN TO SEEK MEDICAL HELP:</strong>')
+                .replace(/MEDICATION\/TREATMENT INFO:/g, '<strong>MEDICATION/TREATMENT INFO:</strong>');
+            
+            div.innerHTML = formattedText;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html> 

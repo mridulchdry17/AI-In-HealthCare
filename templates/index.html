@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Advisor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Health Advisor</h1>
+        <div class="main-menu">
+            <a href="/chat" class="menu-button">Medical Chat Assistant</a>
+            <button onclick="showHealthForm()" class="menu-button">Health Recommendations</button>
+        </div>
+
+        <div id="healthForm" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h2>Your Health Profile</h2>
+                <form id="recommendationForm" onsubmit="submitHealthForm(event)">
+                    <div class="form-group">
+                        <label for="height">Height (cm)</label>
+                        <input type="number" id="height" required min="100" max="250">
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Weight (kg)</label>
+                        <input type="number" id="weight" required min="30" max="300">
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" required min="15" max="120">
+                    </div>
+                    <div class="form-group">
+                        <label for="activity">Activity Level</label>
+                        <select id="activity" required>
+                            <option value="sedentary">Sedentary</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="active">Active</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="conditions">Medical Conditions (if any)</label>
+                        <textarea id="conditions" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="goals">Health Goals</label>
+                        <textarea id="goals" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="submit-button">Get Recommendations</button>
+                </form>
+                <div id="recommendations" class="recommendations"></div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 
