@@ -6,6 +6,7 @@ A **Flask-based web application** that uses **Google Gemini (Generative AI)** an
 - 🧑‍⚕️ Generate personalized health and wellness recommendations based on user inputs.
 
 ---
+![image](https://github.com/user-attachments/assets/ec6da17b-43b4-409d-9cad-e1feb058b928)
 
 ## 🚀 Features
 
